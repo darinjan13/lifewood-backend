@@ -1,14 +1,6 @@
 {
-  "builds": [
-    {
-      "src": "dist/src/main.js",
-      "use": "@vercel/node"
-    }
-  ],
-  "routes": [
-    {
-      "src": "/(.*)",
-      "dest": "dist/src/main.js"
-    }
-  ]
+  "buildCommand": "npm run build",
+  "installCommand": "npm install",
+  "outputDirectory": "dist/src",
+  "framework": "nestjs"
 }
