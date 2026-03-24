@@ -7,7 +7,11 @@ async function bootstrap() {
 
   // Mirror the CORS setup from your Netlify functions
   app.enableCors({
-    origin: '*',
+    origin: [
+      'http://localhost:5173',
+      'https://soriano-lifewood.netlify.app',
+      'https://lifewood-eight.vercel.app',
+    ],
     methods: ['GET', 'POST', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
   });
