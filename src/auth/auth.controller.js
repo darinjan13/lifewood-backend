@@ -60,6 +60,13 @@ export class AuthController {
   @HttpCode(200)
   async me(@Req() req, @Res() res) {
     const supabase = createSupabaseClient(req, res);
+    
+    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+    
+    if (sessionError || !session) {
+      return res.json({ user: null });
+    }
+
     const { data: { user }, error } = await supabase.auth.getUser();
 
     if (error || !user) {
