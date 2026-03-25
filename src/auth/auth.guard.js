@@ -1,33 +1,22 @@
 import {
   Injectable,
-  Inject,
   CanActivate,
   ExecutionContext,
   UnauthorizedException,
 } from '@nestjs/common';
-import { SUPABASE_SERVICE } from '../supabase/supabase.module';
+import { createSupabaseClient } from '../supabase/supabase-ssr';
 
 @Injectable()
 export class AuthGuard {
-  constructor(@Inject(SUPABASE_SERVICE) supabaseService) {
-    this.supabaseService = supabaseService;
-  }
-
   async canActivate(context) {
     const req = context.switchToHttp().getRequest();
-    const authHeader = req.headers['authorization'] ?? '';
+    const res = context.switchToHttp().getResponse();
 
-    if (!authHeader.startsWith('Bearer ')) {
-      throw new UnauthorizedException(
-        'Missing or malformed Authorization header',
-      );
-    }
+    const supabase = createSupabaseClient(req, res);
+    const { data: { user }, error } = await supabase.auth.getUser();
 
-    const token = authHeader.slice(7);
-    const user = await this.supabaseService.verifyToken(token);
-
-    if (!user) {
-      throw new UnauthorizedException('Invalid or expired session token');
+    if (error || !user) {
+      throw new UnauthorizedException('Invalid or expired session');
     }
 
     req.user = user;

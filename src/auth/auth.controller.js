@@ -3,15 +3,12 @@ import {
   Post,
   Body,
   Req,
+  Res,
   UseGuards,
   HttpCode,
-  Inject,
 } from '@nestjs/common';
 import { ThrottlerGuard } from '@nestjs/throttler';
-import { AuthService } from './auth.service';
-import { AuthGuard } from './auth.guard';
-
-const AUTH_SERVICE = 'AUTH_SERVICE';
+import { createSupabaseClient } from '../supabase/supabase-ssr';
 
 function isValidEmail(email) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
@@ -19,15 +16,11 @@ function isValidEmail(email) {
 
 @Controller('auth')
 export class AuthController {
-  constructor(@Inject(AUTH_SERVICE) authService) {
-    this.authService = authService;
-  }
-
   @Post('login')
   @UseGuards(ThrottlerGuard)
   @HttpCode(200)
-  async login(@Body() body) {
-    const { email, password } = body;
+  async login(@Req() req, @Res() res) {
+    const { email, password } = req.body;
 
     if (!email || !password) {
       throw new Error('Email and password are required');
@@ -41,15 +34,38 @@ export class AuthController {
       throw new Error('Password must be at least 5 characters');
     }
 
-    return this.authService.login(email, password);
+    const supabase = createSupabaseClient(req, res);
+    
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+
+    if (error) {
+      throw new Error(error.message);
+    }
+
+    res.json({ id: data.user.id, email: data.user.email });
   }
 
   @Post('logout')
-  @UseGuards(AuthGuard)
   @HttpCode(200)
-  async logout(@Req() req) {
-    const token = req.headers['authorization'].slice(7);
-    await this.authService.logout(token);
-    return { success: true };
+  async logout(@Req() req, @Res() res) {
+    const supabase = createSupabaseClient(req, res);
+    await supabase.auth.signOut();
+    res.json({ success: true });
+  }
+
+  @Post('me')
+  @HttpCode(200)
+  async me(@Req() req, @Res() res) {
+    const supabase = createSupabaseClient(req, res);
+    const { data: { user }, error } = await supabase.auth.getUser();
+
+    if (error || !user) {
+      return res.json({ user: null });
+    }
+
+    res.json({ id: user.id, email: user.email });
   }
 }
