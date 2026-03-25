@@ -11,7 +11,7 @@ async function bootstrap() {
       'http://localhost:5173',
       'https://soriano-lifewood.netlify.app',
       'https://lifewood-eight.vercel.app',
-      'https://lifewood-darinjan13s-projects.vercel.app/'
+      'https://lifewood-darinjan13s-projects.vercel.app'
     ],
     methods: ['GET', 'POST', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
